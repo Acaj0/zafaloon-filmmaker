@@ -9,14 +9,12 @@ interface InstagramPostProps {
 
 function InstagramPost({ url }: InstagramPostProps) {
   useEffect(() => {
-    // Load Instagram embed script if not present
     if (!window.instgrm) {
       const script = document.createElement('script')
       script.src = '//www.instagram.com/embed.js'
       script.async = true
       document.body.appendChild(script)
     } else {
-      // If script is already loaded, process this embed
       window.instgrm.Embeds.process()
     }
   }, [url])
@@ -39,6 +37,10 @@ export function InstagramFeed() {
     'https://www.instagram.com/reel/C02dkIrRdu4/?utm_source=ig_web_copy_link',
     'https://www.instagram.com/reel/C1IoQJFu1z2/?utm_source=ig_web_copy_link',
     'https://www.instagram.com/reel/C0Htv_BJeMU/?utm_source=ig_web_copy_link',
+    'https://www.instagram.com/reel/CzTeZR5LTum/?utm_source=ig_web_copy_link',
+    'https://www.instagram.com/reel/CzTeZR5LTum/?utm_source=ig_web_copy_link',
+    'https://www.instagram.com/reel/CzTeZR5LTum/?utm_source=ig_web_copy_link',
+    'https://www.instagram.com/reel/CzTeZR5LTum/?utm_source=ig_web_copy_link',
     'https://www.instagram.com/reel/CzTeZR5LTum/?utm_source=ig_web_copy_link',
   ]
 
