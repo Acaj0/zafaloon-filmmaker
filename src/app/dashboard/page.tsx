@@ -15,7 +15,7 @@ interface Post {
 }
 
 export default function Dashboard() {
-  const { data: session, status } = useSession()
+  const { data: session, status } = useSession() || {}
   const router = useRouter()
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -100,8 +100,9 @@ export default function Dashboard() {
     return <div>Carregando...</div>
   }
 
-  if (!session) {
-    return null // or redirect to login
+  if (status === 'unauthenticated') {
+    router.push('/login')
+    return null
   }
 
   return (
@@ -111,7 +112,7 @@ export default function Dashboard() {
           <CardTitle className="text-2xl font-bold">Dashboard do Cliente</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="mb-4">Bem-vindo, {session.user.name} (ID: {session.user.id})</p>
+          <p className="mb-4">Bem-vindo, {session?.user?.name || 'User'} (ID: {session?.user?.id || 'Unknown'})</p>
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="posts">
               {(provided) => (
