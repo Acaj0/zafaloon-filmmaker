@@ -1,7 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
+
+interface Post {
+  id: string
+  url: string
+}
 
 interface InstagramPostProps {
   url: string
@@ -33,27 +38,55 @@ function InstagramPost({ url }: InstagramPostProps) {
 }
 
 export function InstagramFeed() {
-  const posts = [
-    'https://www.instagram.com/reel/C02dkIrRdu4/?utm_source=ig_web_copy_link',
-    'https://www.instagram.com/reel/C1IoQJFu1z2/?utm_source=ig_web_copy_link',
-    'https://www.instagram.com/reel/C0Htv_BJeMU/?utm_source=ig_web_copy_link',
-    'https://www.instagram.com/reel/CzTeZR5LTum/?utm_source=ig_web_copy_link',
-    'https://www.instagram.com/reel/CzTeZR5LTum/?utm_source=ig_web_copy_link',
-    'https://www.instagram.com/reel/CzTeZR5LTum/?utm_source=ig_web_copy_link',
-    'https://www.instagram.com/reel/CzTeZR5LTum/?utm_source=ig_web_copy_link',
-    'https://www.instagram.com/reel/CzTeZR5LTum/?utm_source=ig_web_copy_link',
-  ]
+  const [posts, setPosts] = useState<Post[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        setIsLoading(true)
+        const response = await fetch('/api/posts')
+        if (!response.ok) {
+          throw new Error('Failed to fetch posts')
+        }
+        const data = await response.json()
+        if (!Array.isArray(data)) {
+          throw new Error('Received data is not an array')
+        }
+        setPosts(data)
+      } catch (err) {
+        console.error('Error fetching posts:', err)
+        setError('Failed to load posts. Please try again later.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchPosts()
+  }, [])
+
+  if (isLoading) {
+    return <div>Carregando...</div>
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>
+  }
 
   return (
     <section className="container mx-auto px-4 py-12">
       <h2 className="text-2xl font-bold text-center mb-8">
         VEJA UM POUCO DO MEU TRABALHO
       </h2>
-      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        {posts.map((url, index) => (
-          <InstagramPost key={index} url={url} />
-        ))}
-      </div>
+      {posts.length > 0 ? (
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {posts.map((post) => (
+            <InstagramPost key={post.id} url={post.url} />
+          ))}
+        </div>
+      ) : (
+        <p className="text-center">Nenhum post encontrado.</p>
+      )}
     </section>
   )
 }
