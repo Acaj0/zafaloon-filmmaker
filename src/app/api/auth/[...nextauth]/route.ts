@@ -13,10 +13,7 @@ export const authOptions: NextAuthOptions = {
         console.log("Authorize function called")
         if (credentials?.username === process.env.ADMIN_USERNAME && 
             credentials?.password === process.env.ADMIN_PASSWORD) {
-              console.log("NEXTAUTH_SECRET:", process.env.NEXTAUTH_SECRET);
-console.log("ADMIN_USERNAME:", process.env.ADMIN_USERNAME);
-console.log("ADMIN_PASSWORD:", process.env.ADMIN_PASSWORD);
-console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
+              
           console.log("Credentials match")
           return { id: "1", name: "Admin" }
         }
