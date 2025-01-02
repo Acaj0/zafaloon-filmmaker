@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,6 +14,8 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,6 +27,7 @@ export default function Login() {
         username,
         password,
         redirect: false,
+        callbackUrl,
       })
 
       console.log("Sign in result:", result)
@@ -38,7 +41,7 @@ export default function Login() {
       }
 
       if (result.ok) {
-        router.push('/dashboard')
+        router.push(callbackUrl)
       } else {
         throw new Error('Login falhou por razões desconhecidas. Por favor, tente novamente mais tarde.')
       }
@@ -97,4 +100,3 @@ export default function Login() {
     </div>
   )
 }
-

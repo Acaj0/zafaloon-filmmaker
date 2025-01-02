@@ -15,7 +15,7 @@ interface Post {
 }
 
 export default function Dashboard() {
-  const { data: session, status } = useSession() || {}
+  const { data: session, status } = useSession()
   const router = useRouter()
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -151,4 +151,3 @@ export default function Dashboard() {
     </div>
   )
 }
-
