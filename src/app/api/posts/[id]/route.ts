@@ -1,43 +1,48 @@
-import { NextResponse } from "next/server";
-import { updatePost } from "@/lib/posts";
-
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    
-    const updates = await request.json();
-    
-    if (!updates.url || typeof updates.url !== "string") {
-      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
-    }
-
-    await updatePost(id, updates);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error updating post:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-  }
-}
+import { NextResponse } from "next/server"
+import { updatePost, deletePost, getPostById } from "@/lib/posts"
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
-    
-    // Implement your logic to fetch the post by id
-    // For example:
-    // const post = await getPostById(id);
-    
-    return NextResponse.json({ id });
+    const { id } = params
+    const post = await getPostById(id)
+    if (!post) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 })
+    }
+    return NextResponse.json(post)
   } catch (error) {
-    console.error("Error fetching post:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("Error fetching post:", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }
 
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    const updates = await request.json()
+    const updatedPost = await updatePost(id, updates)
+    return NextResponse.json(updatedPost)
+  } catch (error) {
+    console.error("Error updating post:", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+    await deletePost(id)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error deleting post:", error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  }
+}
