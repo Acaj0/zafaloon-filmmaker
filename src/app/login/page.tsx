@@ -1,26 +1,27 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useState, Suspense } from 'react'; // Added Suspense here
+import { signIn } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-export default function Login() {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
+// Wrap the useSearchParams logic inside Suspense
+const LoginPageContent = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(null)
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
     try {
       const result = await signIn('credentials', {
@@ -28,30 +29,30 @@ export default function Login() {
         password,
         redirect: false,
         callbackUrl,
-      })
+      });
 
-      console.log("Sign in result:", result)
+      console.log("Sign in result:", result);
 
       if (result === undefined) {
-        throw new Error('Falha na conexão com o servidor de autenticação. Por favor, verifique sua conexão de internet e tente novamente.')
+        throw new Error('Falha na conexão com o servidor de autenticação. Por favor, verifique sua conexão de internet e tente novamente.');
       }
 
       if (result.error) {
-        throw new Error(result.error)
+        throw new Error(result.error);
       }
 
       if (result.ok) {
-        router.push(callbackUrl)
+        router.push(callbackUrl);
       } else {
-        throw new Error('Login falhou por razões desconhecidas. Por favor, tente novamente mais tarde.')
+        throw new Error('Login falhou por razões desconhecidas. Por favor, tente novamente mais tarde.');
       }
     } catch (error) {
-      console.error('Erro de login:', error)
-      setError(error instanceof Error ? error.message : "Falha na autenticação. Por favor, tente novamente.")
+      console.error('Erro de login:', error);
+      setError(error instanceof Error ? error.message : "Falha na autenticação. Por favor, tente novamente.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -98,5 +99,14 @@ export default function Login() {
         </CardContent>
       </Card>
     </div>
-  )
-}
+  );
+};
+
+// Wrap the entire LoginPageContent inside Suspense with a fallback
+const LoginPage = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <LoginPageContent />
+  </Suspense>
+);
+
+export default LoginPage;
