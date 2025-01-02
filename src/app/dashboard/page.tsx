@@ -7,16 +7,15 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { Header } from "@/components/header";
 import { Footer } from "@/components/Footer";
-
+import { useToast } from "@/hooks/use-toast"
 interface Post {
   id: string;
   url: string;
 }
 
 export default function Dashboard() {
+  const { toast } = useToast()
   const { data: session, status } = useSession();
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -52,6 +51,7 @@ export default function Dashboard() {
   const handleDragEnd = async (result: any) => {
     if (!result.destination) return;
 
+    // Reorganize the posts array based on the drag result
     const items = Array.from(posts);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
@@ -59,10 +59,11 @@ export default function Dashboard() {
     setPosts(items);
 
     try {
+      // Update the order of the posts in the backend, ensuring new order is reflected
       const response = await fetch("/api/posts/reorder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(items),
+        body: JSON.stringify({ posts: items }), // Send updated order
       });
       if (!response.ok) throw new Error("Failed to reorder posts");
     } catch (error) {
@@ -109,13 +110,11 @@ export default function Dashboard() {
 
   return (
     <div className="mt-5">
-      <Footer  />
+      <Footer />
       <div className="container mx-auto px-4 py-8">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">
-              Dashboard do Cliente
-            </CardTitle>
+            <CardTitle className="text-2xl font-bold">Dashboard</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="mb-4">
@@ -131,11 +130,7 @@ export default function Dashboard() {
                     className="space-y-4"
                   >
                     {posts.map((post, index) => (
-                      <Draggable
-                        key={post.id}
-                        draggableId={post.id}
-                        index={index}
-                      >
+                      <Draggable key={post.id} draggableId={post.id} index={index}>
                         {(provided) => (
                           <li
                             ref={provided.innerRef}
@@ -155,9 +150,7 @@ export default function Dashboard() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() =>
-                                  handleUpdatePost(post.id, post.url)
-                                }
+                                onClick={() => handleUpdatePost(post.id, post.url)}
                               >
                                 Salvar
                               </Button>
@@ -174,7 +167,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-      
     </div>
   );
 }
