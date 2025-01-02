@@ -1,3 +1,4 @@
+import { Footer } from "@/components/Footer"
 import { Header } from "@/components/header"
 import { Hero } from "@/components/hero"
 import { InstagramFeed } from "@/components/instagram-feed"
@@ -8,6 +9,7 @@ export default function Home() {
       <Header />
       <Hero />
       <InstagramFeed/>
+      <Footer/>
     </main>
   )
 }
