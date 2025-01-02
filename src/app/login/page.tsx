@@ -6,19 +6,21 @@ import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from '@/hooks/use-toast'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
+
     try {
-      console.log("Attempting to sign in")
       const result = await signIn('credentials', {
         username,
         password,
@@ -27,23 +29,22 @@ export default function Login() {
 
       console.log("Sign in result:", result)
 
-      if (result?.error) {
+      if (result === undefined) {
+        throw new Error('Falha na conexão com o servidor de autenticação. Por favor, verifique sua conexão de internet e tente novamente.')
+      }
+
+      if (result.error) {
         throw new Error(result.error)
       }
 
-      if (result?.ok) {
-        console.log("Login successful, redirecting to dashboard")
+      if (result.ok) {
         router.push('/dashboard')
       } else {
-        throw new Error('Login falhou')
+        throw new Error('Login falhou por razões desconhecidas. Por favor, tente novamente mais tarde.')
       }
     } catch (error) {
       console.error('Erro de login:', error)
-      toast({
-        title: "Erro de Login",
-        description: "Falha na autenticação. Por favor, verifique suas credenciais e tente novamente.",
-        variant: "destructive",
-      })
+      setError(error instanceof Error ? error.message : "Falha na autenticação. Por favor, tente novamente.")
     } finally {
       setIsLoading(false)
     }
@@ -56,6 +57,12 @@ export default function Login() {
           <CardTitle className="text-2xl font-bold text-center">Login do Cliente</CardTitle>
         </CardHeader>
         <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Erro</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="username" className="text-sm font-medium">
