@@ -6,9 +6,9 @@ export async function middleware(request: NextRequest) {
   try {
     console.log("Middleware called for path:", request.nextUrl.pathname)
 
-    // Allow access to NextAuth API routes
-    if (request.nextUrl.pathname.startsWith('/api/auth')) {
-      console.log("Allowing access to NextAuth API route")
+    // Allow access to NextAuth API routes and posts API route
+    if (request.nextUrl.pathname.startsWith('/api/auth') || request.nextUrl.pathname === '/api/posts') {
+      console.log("Allowing access to public API route")
       return NextResponse.next()
     }
 
@@ -46,3 +46,4 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/api/:path*', '/dashboard']
 }
+

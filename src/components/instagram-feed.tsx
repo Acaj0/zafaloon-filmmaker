@@ -14,17 +14,13 @@ interface InstagramPostProps {
 
 function InstagramPost({ url }: InstagramPostProps) {
   useEffect(() => {
-    // Verificar se window.instgrm está disponível
     if (typeof window !== 'undefined' && window.instgrm) {
-      // Se a instgrm estiver disponível, processamos os embeds
       window.instgrm.Embeds.process()
     } else {
-      // Se não estiver disponível, carregamos o script
       const script = document.createElement('script')
       script.src = '//www.instagram.com/embed.js'
       script.async = true
       script.onload = () => {
-        // Chama o processamento de embed depois que o script for carregado
         if (window.instgrm) {
           window.instgrm.Embeds.process()
         }
@@ -57,17 +53,14 @@ export function InstagramFeed() {
         setIsLoading(true)
         const response = await fetch('/api/posts')
 
-        // Verifica se o status da resposta é ok
         if (!response.ok) {
-          throw new Error('Failed to fetch posts')
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
 
         const data = await response.json()
 
-        // Log para ver o que está sendo retornado da API
         console.log('Posts recebidos da API:', data)
 
-        // Verifica se os dados são um array válido
         if (!Array.isArray(data)) {
           throw new Error('Received data is not an array')
         }
@@ -84,17 +77,14 @@ export function InstagramFeed() {
     fetchPosts()
   }, [])
 
-  // Verificando se está carregando
   if (isLoading) {
-    return <div>Carregando...</div>
+    return <div className="text-center py-12">Carregando...</div>
   }
 
-  // Exibe a mensagem de erro, se houver
   if (error) {
-    return <div>Error: {error}</div>
+    return <div className="text-center py-12 text-red-500">Error: {error}</div>
   }
 
-  // Renderiza os posts
   return (
     <section className="container mx-auto px-4 py-12">
       <h2 className="text-2xl font-bold text-center mb-8">
@@ -112,3 +102,4 @@ export function InstagramFeed() {
     </section>
   )
 }
+
