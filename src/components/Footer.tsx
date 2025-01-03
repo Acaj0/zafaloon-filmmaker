@@ -22,7 +22,7 @@ export function Footer() {
               <a href="/">Home</a>
             </li>
             <li className="hover:underline">
-              <a href="/dashboard">Dashboard</a>
+              <a href="/dashboard">Painel</a>
             </li>
           </div>
         </div>

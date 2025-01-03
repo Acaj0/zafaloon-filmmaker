@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Footer } from "@/components/Footer";
-import { useToast } from "@/hooks/use-toast"
+import Alert from "@/components/Alert";
 
 interface Post {
   id: string;
@@ -46,12 +46,12 @@ function InstagramPost({ url }: { url: string }) {
 }
 
 export default function Dashboard() {
-  const { toast } = useToast()
   const { data: session, status } = useSession();
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newPostUrl, setNewPostUrl] = useState("");
+  const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -70,11 +70,7 @@ export default function Dashboard() {
       setPosts(data);
     } catch (error) {
       console.error("Error fetching posts:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch posts. Please try again.",
-        variant: "destructive",
-      });
+      setAlert({ message: "Failed to fetch posts. Please try again.", type: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -89,17 +85,10 @@ export default function Dashboard() {
       });
       if (!response.ok) throw new Error("Failed to update post");
       await fetchPosts();
-      toast({
-        title: "Success",
-        description: "Post updated successfully.",
-      });
+      setAlert({ message: "Post updated successfully.", type: 'success' });
     } catch (error) {
       console.error("Error updating post:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update post. Please try again.",
-        variant: "destructive",
-      });
+      setAlert({ message: "Failed to update post. Please try again.", type: 'error' });
     }
   };
 
@@ -110,22 +99,19 @@ export default function Dashboard() {
       });
       if (!response.ok) throw new Error("Failed to delete post");
       await fetchPosts();
-      toast({
-        title: "Success",
-        description: "Post deleted successfully.",
-      });
+      setAlert({ message: "Post Apagado.", type: 'success' });
     } catch (error) {
       console.error("Error deleting post:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete post. Please try again.",
-        variant: "destructive",
-      });
+      setAlert({ message: "Erro ao apagar post, tente novamente.", type: 'error' });
     }
   };
 
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newPostUrl.trim()) {
+      setAlert({ message: "Link Invalido.", type: 'error' });
+      return;
+    }
     try {
       const response = await fetch("/api/posts", {
         method: "POST",
@@ -135,17 +121,10 @@ export default function Dashboard() {
       if (!response.ok) throw new Error("Failed to create post");
       await fetchPosts();
       setNewPostUrl("");
-      toast({
-        title: "Success",
-        description: "New post created successfully.",
-      });
+      setAlert({ message: "Novo post criado!", type: 'success' });
     } catch (error) {
       console.error("Error creating post:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create new post. Please try again.",
-        variant: "destructive",
-      });
+      setAlert({ message: "Erro ao criar post, tente novamente.", type: 'error' });
     }
   };
 
@@ -161,31 +140,38 @@ export default function Dashboard() {
   return (
     <div className="mt-5">
       <Footer />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto max-w-[1000px] px-4 ">
+        {alert && (
+          <Alert
+            message={alert.message}
+            type={alert.type}
+            onClose={() => setAlert(null)}
+          />
+        )}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex justify-center items-center">
             <CardTitle className="text-2xl font-bold">Dashboard</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col items-center justify-center">
             <p className="mb-4">
-              Bem-vindo, {session?.user?.name || "User"} (ID:{" "}
-              {session?.user?.id || "Unknown"})
+              Bem-vindo, Zafa Lindo!
             </p>
-            <form onSubmit={handleCreatePost} className="mb-6">
+            <form onSubmit={handleCreatePost} className="mb-10">
               <div className="flex items-center space-x-2">
                 <Input
                   type="text"
                   value={newPostUrl}
                   onChange={(e) => setNewPostUrl(e.target.value)}
-                  placeholder="Enter new post URL"
+                  placeholder="Link do Instagram"
                   className="flex-grow"
                 />
-                <Button type="submit">Create New Post</Button>
+                <Button type="submit"><svg fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"/></svg></Button>
               </div>
             </form>
+            
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {posts.map((post) => (
-                <li key={post.id} className="bg-white shadow-md rounded-lg p-4">
+                <li key={post.id} className="bg-white rounded-lg p-4 max-w-96">
                   <div className="flex items-center space-x-2 mb-4">
                     <Input
                       type="text"
@@ -198,7 +184,7 @@ export default function Dashboard() {
                       size="sm"
                       onClick={() => handleDeletePost(post.id)}
                     >
-                      Delete
+                      <svg fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
                     </Button>
                   </div>
                   <div className="flex justify-center">
