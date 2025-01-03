@@ -1,17 +1,49 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast"
+
 interface Post {
   id: string;
   url: string;
+}
+
+function InstagramPost({ url }: { url: string }) {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.instgrm) {
+      window.instgrm.Embeds.process()
+    } else {
+      const script = document.createElement('script')
+      script.src = '//www.instagram.com/embed.js'
+      script.async = true
+      script.onload = () => {
+        if (window.instgrm) {
+          window.instgrm.Embeds.process()
+        }
+      }
+      document.body.appendChild(script)
+    }
+  }, [url])
+
+  return (
+    <Card>
+      <CardContent className="p-0">
+        <blockquote
+          className="instagram-media w-full"
+          data-instgrm-permalink={url}
+          data-instgrm-version="14"
+          style={{ maxWidth: '300px', minWidth: '200px' }}
+        />
+      </CardContent>
+    </Card>
+  )
 }
 
 export default function Dashboard() {
@@ -20,6 +52,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [newPostUrl, setNewPostUrl] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -48,34 +81,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleDragEnd = async (result: any) => {
-    if (!result.destination) return;
-
-    // Reorganize the posts array based on the drag result
-    const items = Array.from(posts);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
-    setPosts(items);
-
-    try {
-      // Update the order of the posts in the backend, ensuring new order is reflected
-      const response = await fetch("/api/posts/reorder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ posts: items }), // Send updated order
-      });
-      if (!response.ok) throw new Error("Failed to reorder posts");
-    } catch (error) {
-      console.error("Error reordering posts:", error);
-      toast({
-        title: "Error",
-        description: "Failed to reorder posts. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleUpdatePost = async (id: string, newUrl: string) => {
     try {
       const response = await fetch(`/api/posts/${id}`, {
@@ -94,6 +99,59 @@ export default function Dashboard() {
       toast({
         title: "Error",
         description: "Failed to update post. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePositionChange = async (postId: string, newPosition: string) => {
+    try {
+      const newOrder = posts.map(post => post.id);
+      const oldIndex = newOrder.indexOf(postId);
+      newOrder.splice(oldIndex, 1);
+      newOrder.splice(parseInt(newPosition) - 1, 0, postId);
+
+      const response = await fetch("/api/posts/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newOrder),
+      });
+      if (!response.ok) throw new Error("Failed to reorder posts");
+      await fetchPosts();
+      toast({
+        title: "Success",
+        description: "Post position updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error reordering posts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update post position. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: newPostUrl }),
+      });
+      if (!response.ok) throw new Error("Failed to create post");
+      await fetchPosts();
+      setNewPostUrl("");
+      toast({
+        title: "Success",
+        description: "New post created successfully.",
+      });
+    } catch (error) {
+      console.error("Error creating post:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create new post. Please try again.",
         variant: "destructive",
       });
     }
@@ -121,52 +179,58 @@ export default function Dashboard() {
               Bem-vindo, {session?.user?.name || "User"} (ID:{" "}
               {session?.user?.id || "Unknown"})
             </p>
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="posts">
-                {(provided) => (
-                  <ul
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="space-y-4"
-                  >
-                    {posts.map((post, index) => (
-                      <Draggable key={post.id} draggableId={post.id} index={index}>
-                        {(provided) => (
-                          <li
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className="bg-white shadow-md rounded-lg p-4"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <Input
-                                type="text"
-                                value={post.url}
-                                onChange={(e) =>
-                                  handleUpdatePost(post.id, e.target.value)
-                                }
-                                className="flex-grow"
-                              />
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUpdatePost(post.id, post.url)}
-                              >
-                                Salvar
-                              </Button>
-                            </div>
-                          </li>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </ul>
-                )}
-              </Droppable>
-            </DragDropContext>
+            <form onSubmit={handleCreatePost} className="mb-6">
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="text"
+                  value={newPostUrl}
+                  onChange={(e) => setNewPostUrl(e.target.value)}
+                  placeholder="Enter new post URL"
+                  className="flex-grow"
+                />
+                <Button type="submit">Create New Post</Button>
+              </div>
+            </form>
+            <ul className="space-y-8">
+              {posts.map((post, index) => (
+                <li key={post.id} className="bg-white shadow-md rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Select onValueChange={(value) => handlePositionChange(post.id, value)}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder={`Position ${index + 1}`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {posts.map((_, i) => (
+                          <SelectItem key={i} value={(i + 1).toString()}>
+                            Position {i + 1}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="text"
+                      value={post.url}
+                      onChange={(e) => handleUpdatePost(post.id, e.target.value)}
+                      className="flex-grow"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleUpdatePost(post.id, post.url)}
+                    >
+                      Salvar
+                    </Button>
+                  </div>
+                  <div className="flex justify-center">
+                    <InstagramPost url={post.url} />
+                  </div>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
       </div>
     </div>
   );
 }
+
