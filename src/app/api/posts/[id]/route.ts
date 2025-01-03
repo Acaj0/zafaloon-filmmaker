@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import { getPostById, updatePost, deletePost } from "@/lib/posts";
 
+// Update to handle the context.params being a Promise
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> } // Expect params to be a Promise
 ) {
   try {
-    const { id } = params;
-    const post = await getPostById(id);
+    // Await the params to get the resolved value
+    const resolvedParams = await context.params;
+
+    const { id } = resolvedParams; // Access id from the resolved params
+    const post = await getPostById(id); // Use the id to fetch the post
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
@@ -20,10 +24,13 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> } // Expect params to be a Promise
 ) {
   try {
-    const { id } = params;
+    // Await the params to get the resolved value
+    const resolvedParams = await context.params;
+
+    const { id } = resolvedParams; // Extract id from the resolved params
     const updates = await request.json();
     const updatedPost = await updatePost(id, updates);
     return NextResponse.json(updatedPost);
@@ -35,11 +42,14 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> } // Expect params to be a Promise
 ) {
   try {
-    const { id } = params;
-    await deletePost(id);
+    // Await the params to get the resolved value
+    const resolvedParams = await context.params;
+
+    const { id } = resolvedParams; // Extract id from the resolved params
+    await deletePost(id); // Delete the post by id
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting post:", error);
