@@ -3,11 +3,10 @@ import { getPostById, updatePost, deletePost } from "@/lib/posts";
 
 export async function GET(
   request: Request,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const resolvedParams = await context.params;
-    const { id } = resolvedParams;
+    const { id } = params;
     const post = await getPostById(id);
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
@@ -21,11 +20,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const resolvedParams = await context.params;
-    const { id } = resolvedParams;
+    const { id } = params;
     const updates = await request.json();
     const updatedPost = await updatePost(id, updates);
     return NextResponse.json(updatedPost);
@@ -37,11 +35,10 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const resolvedParams = await context.params;
-    const { id } = resolvedParams;
+    const { id } = params;
     await deletePost(id);
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -49,4 +46,3 @@ export async function DELETE(
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
-
