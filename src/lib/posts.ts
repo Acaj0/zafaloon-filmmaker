@@ -16,8 +16,8 @@ function mapPostFromDatabase(post: any): Post {
   return {
     id: post.id,
     url: post.url,
-    createdAt: post.createdat,
-    updatedAt: post.updatedat,
+    createdAt: post.createdat, // Correção: mantemos `createdat` para `createdAt`
+    updatedAt: post.updatedat, // Correção: mantemos `updatedat` para `updatedAt`
   };
 }
 
@@ -27,8 +27,8 @@ function mapPostToDatabase(post: Partial<Post>): any {
   return {
     id,
     url,
-    createdat: createdAt,
-    updatedat: updatedAt,
+    createdat: createdAt, // Correção: usamos `createdat` como está no banco
+    updatedat: updatedAt, // Correção: usamos `updatedat` como está no banco
   };
 }
 
@@ -37,7 +37,7 @@ export async function getPosts(): Promise<Post[]> {
   const { data, error } = await supabase
     .from("posts")
     .select("*")
-    .order("createdat", { ascending: true });
+    .order("createdat", { ascending: true }); // Usamos `createdat` como está no banco
 
   if (error) {
     throw new Error(error.message);
@@ -63,14 +63,20 @@ export async function getPostById(id: string): Promise<Post | null> {
 
 // Create a new post
 export async function createPost(url: string): Promise<Post> {
+  const now = new Date().toISOString(); // Data atual no formato ISO 8601
+
   const { data, error } = await supabase
     .from("posts")
-    .insert([{ url }])
+    .insert([{
+      url,
+      createdat: now,  // Usamos `createdat` como está no banco de dados
+      updatedat: now   // Usamos `updatedat` como está no banco de dados
+    }])
     .select()
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(`Error creating post: ${error.message}`);
   }
 
   return mapPostFromDatabase(data);
@@ -83,7 +89,7 @@ export async function updatePost(
 ): Promise<Post> {
   const { data, error } = await supabase
     .from("posts")
-    .update(mapPostToDatabase(updates))
+    .update(mapPostToDatabase(updates)) // A função `mapPostToDatabase` já cuida do formato correto
     .eq("id", id)
     .select()
     .single();
