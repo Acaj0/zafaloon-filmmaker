@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast"
 
@@ -104,29 +103,22 @@ export default function Dashboard() {
     }
   };
 
-  const handlePositionChange = async (postId: string, newPosition: string) => {
+  const handleDeletePost = async (id: string) => {
     try {
-      const newOrder = posts.map(post => post.id);
-      const oldIndex = newOrder.indexOf(postId);
-      newOrder.splice(oldIndex, 1);
-      newOrder.splice(parseInt(newPosition) - 1, 0, postId);
-
-      const response = await fetch("/api/posts/reorder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newOrder),
+      const response = await fetch(`/api/posts/${id}`, {
+        method: "DELETE",
       });
-      if (!response.ok) throw new Error("Failed to reorder posts");
+      if (!response.ok) throw new Error("Failed to delete post");
       await fetchPosts();
       toast({
         title: "Success",
-        description: "Post position updated successfully.",
+        description: "Post deleted successfully.",
       });
     } catch (error) {
-      console.error("Error reordering posts:", error);
+      console.error("Error deleting post:", error);
       toast({
         title: "Error",
-        description: "Failed to update post position. Please try again.",
+        description: "Failed to delete post. Please try again.",
         variant: "destructive",
       });
     }
@@ -191,22 +183,10 @@ export default function Dashboard() {
                 <Button type="submit">Create New Post</Button>
               </div>
             </form>
-            <ul className="space-y-8">
-              {posts.map((post, index) => (
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {posts.map((post) => (
                 <li key={post.id} className="bg-white shadow-md rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-4">
-                    <Select onValueChange={(value) => handlePositionChange(post.id, value)}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder={`Position ${index + 1}`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {posts.map((_, i) => (
-                          <SelectItem key={i} value={(i + 1).toString()}>
-                            Position {i + 1}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                     <Input
                       type="text"
                       value={post.url}
@@ -214,11 +194,11 @@ export default function Dashboard() {
                       className="flex-grow"
                     />
                     <Button
-                      variant="outline"
+                      variant="destructive"
                       size="sm"
-                      onClick={() => handleUpdatePost(post.id, post.url)}
+                      onClick={() => handleDeletePost(post.id)}
                     >
-                      Salvar
+                      Delete
                     </Button>
                   </div>
                   <div className="flex justify-center">
