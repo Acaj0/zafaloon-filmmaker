@@ -18,12 +18,13 @@ export function Footer() {
             </Link>
           </div>
           <div className="flex items-start justify-start flex-col">
-            <li className="hover:underline">
-              <a href="/">Home</a>
-            </li>
-            <li className="hover:underline">
-              <a href="/dashboard">Painel</a>
-            </li>
+            <a className="hover:underline" href="/">
+              Home
+            </a>
+
+            <a className="hover:underline" href="/dashboard">
+              Painel
+            </a>
           </div>
         </div>
       </div>
