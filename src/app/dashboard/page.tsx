@@ -138,7 +138,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="mt-5">
+    <div className="bg-gray-100 py-5">
       <Footer />
       <div className="container mx-auto max-w-[1000px] px-4 ">
         {alert && (
