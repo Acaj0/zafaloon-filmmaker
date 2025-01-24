@@ -39,9 +39,10 @@ export function Hero() {
             </p>
           </div>
           <div className="flex gap-4 flex-row">
+            <a href="/Sobre-Mim">
             <Button variant="default" className="w-full md:w-auto">
               Sobre mim
-            </Button>
+            </Button></a>
             <a href="https://www.instagram.com/guizafalon/" target="_blank">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
